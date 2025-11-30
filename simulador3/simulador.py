@@ -79,9 +79,13 @@ class DiskSchedulerSimulator:
         scrollbar.pack(side="right", fill="y")
         self.results_tree.configure(yscrollcommand=scrollbar.set)
 
-        # Botón eliminar
-        tk.Button(results_frame, text="-", command=self.delete_selected,
-                  bg="#ff9800", fg="white", font=("Arial", 12, "bold"), width=3).pack(pady=5)
+        # Frame para botón eliminar
+        button_frame = tk.Frame(results_frame, bg="#f0f0f0")
+        button_frame.pack(pady=5)
+
+        tk.Button(button_frame, text="-", command=self.delete_selected,
+                  bg="#ff9800", fg="white", font=("Arial", 12, "bold"), width=3,
+                  cursor="hand2").pack()
 
         # Frame de detalles
         details_frame = tk.LabelFrame(self.root, text="Detalles de la Simulación",
@@ -250,19 +254,36 @@ class DiskSchedulerSimulator:
             self.animation_label.config(text="No hay animación disponible")
 
     def prev_step(self):
-        if self.animation_index > 0:
-            self.animation_index -= 1
-            self.show_animation_step()
+        if self.current_animation:
+            if self.animation_index > 0:
+                self.animation_index -= 1
+                self.show_animation_step()
+        else:
+            messagebox.showinfo("Info", "Primero ejecuta una simulación para ver la animación")
 
     def next_step(self):
-        if self.animation_index < len(self.current_animation) - 1:
-            self.animation_index += 1
-            self.show_animation_step()
+        if self.current_animation:
+            if self.animation_index < len(self.current_animation) - 1:
+                self.animation_index += 1
+                self.show_animation_step()
+            else:
+                messagebox.showinfo("Info", "Has llegado al final de la animación")
+        else:
+            messagebox.showinfo("Info", "Primero ejecuta una simulación para ver la animación")
 
     def toggle_play(self):
+        if not self.current_animation:
+            messagebox.showinfo("Info", "Primero ejecuta una simulación para ver la animación")
+            return
+
         self.is_playing = not self.is_playing
         if self.is_playing:
+            # Reiniciar desde el principio si ya llegó al final
+            if self.animation_index >= len(self.current_animation) - 1:
+                self.animation_index = 0
             self.auto_play()
+        else:
+            messagebox.showinfo("Pausado", "Animación pausada")
 
     def auto_play(self):
         if self.is_playing and self.animation_index < len(self.current_animation) - 1:
@@ -281,6 +302,9 @@ class DiskSchedulerSimulator:
             index = self.results_tree.index(selected[0])
             del self.results[index]
             self.update_results_table()
+            messagebox.showinfo("Eliminado", "Resultado eliminado correctamente")
+        else:
+            messagebox.showwarning("Advertencia", "Por favor selecciona un resultado de la tabla para eliminar")
 
     def clear_results(self):
         self.results = []
